@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | TG_MiniApp</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>	
+	<script src="TGMiniApp.js"></script>
+  </head>
+  <body style="text-align: center; padding: 0; border: 0; margin: 0;">
+    <div id="unity-container" class="unity-desktop">
+      <div id="unity-logo">
+        <canvas id="unity-canvas"></canvas>
+        <div id="unity-loading-bar">
+          <div id="unity-progress-bar-empty">
+            <div id="unity-progress-bar-full"></div>
+            <span id="unity_basketball_logo"></span>
+          </div>
+          <div id="unity-loading"></div>           
+        </div>
+      </div>
+    </div>
+    <script>
+
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/game.loader.js";
+      var config = {
+        dataUrl: buildUrl + "/game.data.unityweb",
+        frameworkUrl: buildUrl + "/game.framework.js.unityweb",
+        codeUrl: buildUrl + "/game.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "TG_MiniApp",
+        productVersion: "1.0",
+      };
+
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+        container.className = "unity-mobile";
+        canvas.className = "unity-mobile";
+
+      }
+
+// #if BACKGROUND_FILENAME
+//       canvas.style.background = "url('" + buildUrl + "/game.jpg') center / cover";
+// #endif
+      loadingBar.style.display = "block";
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = 100 * progress + "%";
+              }).then((unityInstance) => {               
+                progressBarFull.style.width = "100%";
+                loadingBar.style.display = "none";
+                if (window && window.Telegram && window.Telegram.WebApp) {
+                    window.unityInstance = unityInstance;              
+                    window.unityInstance.SendMessage("GameManager", "SetTelegramInitData", window.Telegram.WebApp.initData);     
+                }else{
+                    window.unityInstance = unityInstance;              
+                    window.unityInstance.SendMessage("GameManager", "SetTelegramInitData", ""); 
+                }
+                                      
+              }).catch((message) => {
+                alert(message);
+              });
+            };
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>
